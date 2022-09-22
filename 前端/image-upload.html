@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="js/mui.min.js"></script>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<script type="text/javascript" charset="utf-8">
+			mui.init();
+		</script>
+	</head>
+	<body>
+		<button id="uploadBtn">上传照片</button>
+		<img id="showPic" src="" style="width: 100%;height: auto;"/>
+	</body>
+	<script src="js/app.js"></script>
+	<script>
+		/**
+		 * 内网一定要互通
+		 * 1. 虚拟机中linux与本地都要关闭防火墙，设置静态ip（注意不要网络冲突）
+		 * 2. 图片服务器（即虚拟机要和本地电脑互通）
+		 * 3. 所有计算机节点的网段保证一致，比如 192.168.1.xxx，172.10.10.xxx
+		 * 4. 手机和你的电脑要在同一个网络，同一个wifi，网段要检查是否一致
+		 * 5. 客户端请求的serverUrl一定要写你电脑的内网IP，如果写localhost，那么手机是请求不了的
+		 * 注意: 如果你的电脑使用的校内网络，可能会导致无法访问
+		 */
+		
+		// 监听按钮uploadBtn，点击事件
+		document.getElementById('uploadBtn').addEventListener('tap', function() {
+			// 从相册中选择一张照片
+			plus.gallery.pick(function(path) {
+				// 调用上传函数
+				uploadImg(path);
+			}, function(e) {
+				console.log("取消选择图片");
+			}, {
+				filter: "image"
+			});
+		}, false);
+
+		// 上传照片的方法
+		function uploadImg(path) {
+			var serverUrl = app.serverUrl + "/u/uploadFaceBase64";
+			var user = app.getUserGlobalInfo();
+			var task = plus.uploader.createUpload(serverUrl, {
+					method: "POST"
+				},
+				function(t, status) {
+					if (status == 200) {
+						console.log("上传成功：");
+						var res = t.responseText;
+						console.log(res);
+						mui.openWindow("index.html", "index.html");
+					} else {
+						console.log("上传失败：" + status);
+					}
+				});
+				
+			// 向任务中添加file对象
+			task.addFile(path, {
+				key: "faceData"
+			});
+			task.addData("userId", user.id);
+			task.start();
+		}
+	</script>
+
+</html>
